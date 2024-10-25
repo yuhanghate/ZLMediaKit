@@ -389,9 +389,16 @@ static ServiceController<RtpServer> s_rtp_server;
 #endif
 
 
-static inline string getPusherKey(const string &schema, const string &vhost, const string &app, const string &stream,
-                                  const string &dst_url) {
-    return schema + "/" + vhost + "/" + app + "/" + stream + "/" + MD5(dst_url).hexdigest();
+static inline string getPusherKey(const string &schema, const string &vhost, const string &app, const string &stream, const string &dst_url) {
+    string ip = dst_url.substr(7, 8);
+    //    string newip = ip.replace(ip.begin(), ip.end(), ".", "_");
+    std::replace(ip.begin(), ip.end(), '.', '_');
+    size_t lastSlashPos = dst_url.rfind('/');
+    if (lastSlashPos != std::string::npos) {
+        string dst_stream = dst_url.substr(lastSlashPos + 1);
+        return schema + "/" + vhost + "/" + app + "/" + stream + "/" + ip + "_" + dst_stream;
+    }
+    return schema + "/" + vhost + "/" + app + "/" + stream + "/" + ip;
 }
 
 static void fillSockInfo(Value& val, SockInfo* info) {
