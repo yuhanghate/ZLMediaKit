@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS build
+FROM ubuntu:18.04 AS build
 #shell,rtmp,rtsp,rtsps,http,https,rtp
 EXPOSE 9000/tcp
 EXPOSE 1935/tcp
@@ -9,15 +9,9 @@ EXPOSE 443/tcp
 EXPOSE 10000/udp
 EXPOSE 10000/tcp
 
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal main restricted universe multiverse" > /tmp/new_sources.list
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-security main restricted universe multiverse" >> /tmp/new_sources.list
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-updates main restricted universe multiverse" >> /tmp/new_sources.list
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse" >> /tmp/new_sources.list
-RUN echo "deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ focal-backports main restricted universe multiverse" >> /tmp/new_sources.list
-RUN cat /tmp/new_sources.list > /etc/apt/sources.list
-RUN rm /tmp/new_sources.list
+ADD sources.list /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y ca-certificates \
+RUN apt-get update && \
          DEBIAN_FRONTEND="noninteractive" \
          apt-get install -y --no-install-recommends \
          build-essential \
@@ -39,7 +33,7 @@ RUN apt-get update && apt-get install -y ca-certificates \
 RUN mkdir -p /opt/media
 
 WORKDIR /opt/media
-RUN git clone --depth=1 https://github.com/ZLMediaKit/ZLMediaKit && \
+RUN git clone --depth=1 https://gitee.com/xia-chu/ZLMediaKit && \
     cd ZLMediaKit && git submodule update --init --recursive && \
     mkdir -p build release/linux/Release/
 
@@ -48,7 +42,6 @@ RUN cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make
 
 FROM ubuntu:18.04
-LABEL maintainer "Gemfield <gemfield@civilnet.cn>"
 
 RUN apt-get update && \
          DEBIAN_FRONTEND="noninteractive" \
@@ -67,5 +60,6 @@ RUN apt-get update && \
 
 WORKDIR /opt/media/bin/
 COPY --from=build /opt/media/ZLMediaKit/release/linux/Release/MediaServer /opt/media/bin/MediaServer
+COPY --from=build /opt/media/ZLMediaKit/release/linux/Release/default.pem /opt/media/bin/default.pem
 ENV PATH /opt/media/bin:$PATH
-CMD ["MediaServer"]
+CMD ["MediaServer", "-c", "config.ini"]
