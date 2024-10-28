@@ -1,4 +1,4 @@
-docker stop linux
-docker rm linux
-docker run -d --name linux -v /Users/yuhang/ZLMediaKit:/root/ZLMediaKit  linux:latest
-docker exec -it linux /bin/bash
+docker stop zlm
+docker rm zlm
+docker run -d --name zlm -v /etc/yum.repos.d/openEuler.repo:/root/docker/openEuler.repo  -v /root/docker/ZLMediaKit:/root/ZLMediaKit  zlm:latest
+docker exec -it zlm /bin/bash
